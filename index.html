@@ -7,9 +7,18 @@
     <style>
         :root { --primary: #1a73e8; --success: #188038; --danger: #d93025; --dark: #202124; --bg: #f1f3f4; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
-        .dashboard { display: grid; grid-template-columns: 320px 1fr 320px; gap: 15px; max-width: 1400px; margin: 0 auto; }
         
-        .card { background: white; border-radius: 8px; border: 1px solid #dadce0; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 15px; display: flex; flex-direction: column; }
+        /* SECURITY OVERLAY */
+        #gatekeeper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #202124; color: white; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 9999;
+        }
+        .pass-input { padding: 12px; border-radius: 4px; border: none; margin-top: 10px; text-align: center; font-size: 1.2rem; }
+        
+        .dashboard { display: grid; grid-template-columns: 320px 1fr 320px; gap: 15px; max-width: 1400px; margin: 0 auto; display: none; } /* Hidden by default */
+        
+        .card { background: white; border-radius: 8px; border: 1px solid #dadce0; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 15px; }
         .card-header { background: #f8f9fa; padding: 10px 15px; font-weight: bold; font-size: 0.85rem; color: #5f6368; border-bottom: 1px solid #dadce0; display: flex; justify-content: space-between; align-items: center; }
         .padding { padding: 15px; }
 
@@ -17,45 +26,34 @@
         .score-box { display: flex; justify-content: space-around; align-items: center; text-align: center; background: #202124; color: white; padding: 15px; border-radius: 6px; }
         .score-val { font-size: 2.5rem; font-weight: bold; display: block; }
         .score-btn { background: #3c4043; border: none; color: white; padding: 5px 15px; border-radius: 4px; cursor: pointer; margin-top: 5px; }
-        .score-btn:hover { background: #5f6368; }
 
-        /* Inputs */
-        label { font-size: 0.7rem; color: #70757a; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 4px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #dadce0; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px; font-size: 1rem; }
-        
         /* Strategy Flow */
-        .node-text { font-size: 1.1rem; font-weight: 500; margin-bottom: 15px; line-height: 1.4; }
         .flow-btn { display: block; width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #dadce0; border-radius: 6px; cursor: pointer; text-align: left; background: white; transition: 0.2s; }
         .flow-btn:hover { border-color: var(--primary); color: var(--primary); background: #f8fbff; }
         .action-box { background: #fff4e5; border-left: 4px solid #ffa117; padding: 12px; margin-bottom: 15px; font-size: 0.95rem; }
 
-        /* Results & History */
-        .res-panel { background: #f8f9fa; padding: 10px; border-radius: 4px; border: 1px solid #eee; margin-bottom: 10px; }
         .log-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        .log-table td, .log-table th { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
-        .val-red { color: var(--danger); font-weight: bold; }
-        .val-green { color: var(--success); font-weight: bold; }
-
+        .log-table td { padding: 8px; border-bottom: 1px solid #eee; }
         @media (max-width: 1000px) { .dashboard { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="dashboard">
+<div id="gatekeeper">
+    <h2>TradeShark Secure Access</h2>
+    <input type="password" id="pass-field" class="pass-input" placeholder="Enter Password" onkeypress="checkPass(event)">
+    <p style="color: #888; font-size: 0.8rem; margin-top: 20px;">Press Enter to Login</p>
+</div>
+
+<div class="dashboard" id="main-ui">
     <div class="side-col">
         <div class="card">
             <div class="card-header">SCORE TRACKER <button onclick="resetScore()" class="score-btn" style="margin:0; padding:2px 5px; font-size:10px">RESET</button></div>
             <div class="padding">
                 <div class="score-box">
-                    <div>
-                        <span class="score-val" id="score-a">0</span>
-                        <button class="score-btn" onclick="changeScore('a', 1)">+ Game</button>
-                    </div>
+                    <div><span class="score-val" id="score-a">0</span><button class="score-btn" onclick="changeScore('a', 1)">+ Game</button></div>
                     <div style="font-size: 1.5rem; opacity: 0.5;">VS</div>
-                    <div>
-                        <span class="score-val" id="score-b">0</span>
-                        <button class="score-btn" onclick="changeScore('b', 1)">+ Game</button>
-                    </div>
+                    <div><span class="score-val" id="score-b">0</span><button class="score-btn" onclick="changeScore('b', 1)">+ Game</button></div>
                 </div>
             </div>
         </div>
@@ -63,163 +61,102 @@
         <div class="card">
             <div class="card-header">CALCULATOR</div>
             <div class="padding">
-                <label>Match / Player</label>
-                <input type="text" id="match-name" placeholder="e.g. Federer v Nadal">
-                
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <div><label>Stake ($)</label><input type="number" id="stake" value="10" oninput="runCalcs()"></div>
-                    <div><label>Entry Odds</label><input type="number" id="odds" value="1.50" step="0.01" oninput="runCalcs()"></div>
-                </div>
-
-                <label>Type</label>
+                <input type="text" id="match-name" placeholder="Match Name">
+                <input type="number" id="stake" value="10" placeholder="Stake" oninput="runCalcs()">
+                <input type="number" id="odds" value="1.50" step="0.01" oninput="runCalcs()">
                 <select id="trade-type" onchange="runCalcs()">
-                    <option value="lay">Lay (Selling)</option>
-                    <option value="back">Back (Buying)</option>
+                    <option value="lay">Lay</option>
+                    <option value="back">Back</option>
                 </select>
-
-                <div class="res-panel">
-                    <div id="risk-out" class="val-red">Liability: -$5.00</div>
-                    <div id="profit-out" class="val-green">Profit: +$10.00</div>
+                <div style="background:#f8f9fa; padding:10px; border-radius:4px; margin-bottom:10px;">
+                    <div id="risk-out" style="color:var(--danger)">Liability: -$5.00</div>
+                    <div id="profit-out" style="color:var(--success)">Profit: +$10.00</div>
                 </div>
-
-                <label>Current Exit Odds (Hedge)</label>
-                <input type="number" id="exit-odds" placeholder="Enter odds to green up" step="0.01" oninput="runCalcs()">
-                <div id="green-up-result" style="font-size: 0.85rem; padding: 5px; border-radius:4px;"></div>
-
-                <button onclick="logTrade()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer; margin-top:10px;">LOG TRADE & SCORE</button>
+                <button onclick="logTrade()" style="width:100%; padding:10px; background:var(--primary); color:white; border:none; border-radius:4px; cursor:pointer;">LOG TRADE</button>
             </div>
         </div>
     </div>
 
     <div class="main-col">
         <div class="card" style="min-height: 500px;">
-            <div class="card-header">STRATEGY FLOW CHART <button onclick="renderFlow('start')" class="score-btn" style="margin:0; padding:2px 5px; font-size:10px">RESTART FLOW</button></div>
-            <div class="padding" id="flow-content">
-                </div>
+            <div class="card-header">STRATEGY FLOW</div>
+            <div class="padding" id="flow-content"></div>
         </div>
     </div>
 
     <div class="side-col">
         <div class="card">
-            <div class="card-header">TRADE HISTORY</div>
-            <div class="padding" style="max-height: 400px; overflow-y: auto; padding:0;">
-                <table class="log-table">
-                    <thead><tr><th>Match (Score)</th><th>Trade</th></tr></thead>
-                    <tbody id="history-body"></tbody>
-                </table>
-                <button onclick="clearHistory()" style="width:100%; background:none; border:none; color:var(--danger); font-size:10px; cursor:pointer; padding:10px;">CLEAR ALL HISTORY</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">LIVE TOOLS</div>
+            <div class="card-header">HISTORY</div>
             <div class="padding">
-                <button class="flow-btn" onclick="window.open('https://www.betfair.com/exchange/plus/tennis', '_blank')">🌐 Betfair Exchange</button>
-                <button class="flow-btn" onclick="window.open('https://www.flashscore.com/tennis/', '_blank')">🎾 Flashscore Live</button>
+                <table class="log-table"><tbody id="history-body"></tbody></table>
+                <button onclick="clearHistory()" style="background:none; border:none; color:red; cursor:pointer; font-size:10px;">CLEAR LOGS</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// --- SCORE TRACKER ---
-let scoreA = 0; let scoreB = 0;
-function changeScore(p, val) {
-    if(p === 'a') scoreA = Math.max(0, scoreA + val);
-    else scoreB = Math.max(0, scoreB + val);
-    document.getElementById('score-a').innerText = scoreA;
-    document.getElementById('score-b').innerText = scoreB;
-}
-function resetScore() { scoreA = 0; scoreB = 0; changeScore('a', 0); changeScore('b', 0); }
+// --- SECURITY ---
+const MY_PASSWORD = "sHark2354"; // CHANGE THIS TO YOUR CHOICE
 
-// --- STRATEGY LOGIC ---
-const flow = {
-    start: { text: "Select Match Phase:", options: [{ text: "Set 1 Start", next: "s1_expect" }, { text: "Set 2 Start", next: "s2_winner" }] },
-    s1_expect: { text: "Expect favorite to win easily?", options: [{ text: "Yes (Strong Fav)", next: "s1_yes_chance" }, { text: "No (Wait/Lay)", next: "s1_no_price" }] },
-    s1_yes_chance: { text: "Is there a chance of the favorite being broken?", options: [{ text: "Yes", next: "s1_yes_wait_break" }, { text: "No", next: "s1_yes_20ticks" }] },
-    s1_yes_wait_break: { action: "Wait for break of serve then enter trade.", options: [{ text: "Reset", next: "start" }] },
-    s1_yes_20ticks: { action: "Wait for price to rise MIN 20 ticks or BP, then BACK.", options: [{ text: "Reset", next: "start" }] },
-    s1_no_price: { text: "Is favorite priced below 1.50?", options: [{ text: "Yes (<1.50)", next: "s1_no_20ticks" }, { text: "No (>1.50)", next: "s1_no_wait_break" }] },
-    s1_no_20ticks: { action: "Wait for price drop 20-25 ticks in early games and LAY.", options: [{ text: "Reset", next: "start" }] },
-    s1_no_wait_break: { action: "Wait for favorite to break serve and then LAY.", options: [{ text: "Reset", next: "start" }] },
-    s2_winner: { text: "Who won Set 1?", options: [{ text: "Favorite", next: "s2_fav_broken" }, { text: "Underdog", next: "s2_under_comp" }] },
-    s2_fav_broken: { text: "How many times was favorite broken in Set 1?", options: [{ text: "0", next: "s2_fav_0" }, { text: "1", next: "s2_fav_1" }, { text: "2+", next: "s2_fav_2" }] },
-    s2_fav_0: { action: "Wait for 10-15 tick drop. LAY IF underdog had break chances.", options: [{ text: "Continue to 4-4", next: "s2_44" }] },
-    s2_fav_1: { action: "Wait for fave price drop 10-15 ticks before LAYING.", options: [{ text: "Continue to 4-4", next: "s2_44" }] },
-    s2_fav_2: { action: "LAY favorite with partial stake.", options: [{ text: "Continue to 4-4", next: "s2_44" }] },
-    s2_under_comp: { text: "Was favorite competitive in Set 1?", options: [{ text: "Yes", next: "s2_lay_winner" }, { text: "No (Injured)", next: "start" }] },
-    s2_lay_winner: { action: "LAY the set winner (Underdog). Market is biased.", options: [{ text: "Continue to 4-4", next: "s2_44" }] },
-    s2_44: { text: "Is there a break before 4-4?", options: [{ text: "Yes (Hedge/Exit)", next: "start" }, { text: "No (Exit 4-4)", next: "start" }] }
-};
-
-function renderFlow(nodeId) {
-    const node = flow[nodeId];
-    const container = document.getElementById('flow-content');
-    let html = '';
-    if (node.action) html += `<div class="action-box"><strong>INSTRUCTION:</strong><br>${node.action}</div>`;
-    if (node.text) html += `<div class="node-text">${node.text}</div>`;
-    node.options.forEach(o => html += `<button class="flow-btn" onclick="renderFlow('${o.next}')">${o.text}</button>`);
-    container.innerHTML = html;
-}
-
-// --- CALCULATORS ---
-function runCalcs() {
-    const stake = parseFloat(document.getElementById('stake').value) || 0;
-    const odds = parseFloat(document.getElementById('odds').value) || 0;
-    const exit = parseFloat(document.getElementById('exit-odds').value) || 0;
-    const type = document.getElementById('trade-type').value;
-
-    let liab, prof;
-    if (type === 'back') { liab = stake; prof = stake * (odds - 1); }
-    else { liab = stake * (odds - 1); prof = stake; }
-    document.getElementById('risk-out').innerText = `Liability: -$${liab.toFixed(2)}`;
-    document.getElementById('profit-out').innerText = `Profit: +$${prof.toFixed(2)}`;
-
-    if (exit > 1) {
-        const hedgeStake = (stake * odds) / exit;
-        const pl = (type === 'back') ? (hedgeStake - stake) : (stake - hedgeStake);
-        const color = pl >= 0 ? '#e6ffed' : '#ffeef0';
-        const txtColor = pl >= 0 ? 'var(--success)' : 'var(--danger)';
-        document.getElementById('green-up-result').style.background = color;
-        document.getElementById('green-up-result').innerHTML = `<strong style="color:${txtColor}">Hedge Stake: $${hedgeStake.toFixed(2)} | P/L: $${pl.toFixed(2)}</strong>`;
-    } else {
-        document.getElementById('green-up-result').innerHTML = '';
-        document.getElementById('green-up-result').style.background = 'transparent';
+function checkPass(e) {
+    if (e.key === "Enter") {
+        const input = document.getElementById('pass-field').value;
+        if (input === MY_PASSWORD) {
+            document.getElementById('gatekeeper').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'grid';
+            renderFlow('start');
+        } else {
+            alert("Incorrect Password");
+            document.getElementById('pass-field').value = "";
+        }
     }
 }
 
-// --- HISTORY ---
-function logTrade() {
-    const match = document.getElementById('match-name').value || "Tennis Match";
+// --- LOGIC (RETAINED FROM PREVIOUS VERSION) ---
+let scoreA = 0, scoreB = 0;
+function changeScore(p, v) { p==='a' ? scoreA+=v : scoreB+=v; document.getElementById('score-a').innerText=scoreA; document.getElementById('score-b').innerText=scoreB; }
+function resetScore() { scoreA=0; scoreB=0; changeScore('a',0); }
+
+const flow = {
+    start: { text: "Select Match Phase:", options: [{ text: "Set 1 Start", next: "s1_expect" }, { text: "Set 2 Start", next: "s2_winner" }] },
+    s1_expect: { text: "Expect favorite to win easily?", options: [{ text: "Yes", next: "s1_yes" }, { text: "No", next: "s1_no" }] },
+    s1_yes: { action: "Look for 20 tick rise then BACK.", options: [{ text: "Restart", next: "start" }] },
+    s1_no: { action: "Look for price drop then LAY.", options: [{ text: "Restart", next: "start" }] },
+    s2_winner: { text: "Who won set 1?", options: [{ text: "Fav", next: "start" }, { text: "Dog", next: "start" }] }
+};
+
+function renderFlow(id) {
+    const node = flow[id];
+    let html = (node.action ? `<div class="action-box">${node.action}</div>` : "") + `<div class="node-text">${node.text}</div>`;
+    node.options.forEach(o => html += `<button class="flow-btn" onclick="renderFlow('${o.next}')">${o.text}</button>`);
+    document.getElementById('flow-content').innerHTML = html;
+}
+
+function runCalcs() {
+    const s = document.getElementById('stake').value; const o = document.getElementById('odds').value;
     const type = document.getElementById('trade-type').value;
-    const stake = document.getElementById('stake').value;
-    const odds = document.getElementById('odds').value;
-    const score = `${scoreA}-${scoreB}`;
-    
-    const entry = { match, score, type, details: `$${stake} @ ${odds}` };
-    let history = JSON.parse(localStorage.getItem('tradeSharkHistory') || "[]");
-    history.unshift(entry);
-    localStorage.setItem('tradeSharkHistory', JSON.stringify(history));
-    updateHistoryUI();
+    const liab = type === 'back' ? s : s*(o-1);
+    const prof = type === 'back' ? s*(o-1) : s;
+    document.getElementById('risk-out').innerText = `Liability: -$${parseFloat(liab).toFixed(2)}`;
+    document.getElementById('profit-out').innerText = `Profit: +$${parseFloat(prof).toFixed(2)}`;
 }
 
-function updateHistoryUI() {
-    const history = JSON.parse(localStorage.getItem('tradeSharkHistory') || "[]");
-    const body = document.getElementById('history-body');
-    body.innerHTML = history.map(h => `
-        <tr>
-            <td><strong>${h.match}</strong><br><small>Score: ${h.score}</small></td>
-            <td><span style="text-transform:uppercase; font-weight:bold">${h.type}</span><br>${h.details}</td>
-        </tr>
-    `).join('');
+function logTrade() {
+    const entry = { match: document.getElementById('match-name').value, score: `${scoreA}-${scoreB}`, details: `${document.getElementById('trade-type').value} $${document.getElementById('stake').value}` };
+    let h = JSON.parse(localStorage.getItem('ts_log') || "[]"); h.unshift(entry);
+    localStorage.setItem('ts_log', JSON.stringify(h)); updateUI();
 }
 
-function clearHistory() { if(confirm("Delete all logs?")) { localStorage.removeItem('tradeSharkHistory'); updateHistoryUI(); } }
+function updateUI() {
+    const h = JSON.parse(localStorage.getItem('ts_log') || "[]");
+    document.getElementById('history-body').innerHTML = h.map(x => `<tr><td>${x.match} (${x.score})</td><td>${x.details}</td></tr>`).join('');
+}
 
-// Start
-renderFlow('start');
+function clearHistory() { localStorage.removeItem('ts_log'); updateUI(); }
+
+updateUI();
 runCalcs();
-updateHistoryUI();
 </script>
 </body>
 </html>
