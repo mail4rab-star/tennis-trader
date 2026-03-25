@@ -1,162 +1,326 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TradeShark Ultimate Station</title>
+    <title>Tennis Flow Chart App</title>
     <style>
-        :root { --primary: #1a73e8; --success: #188038; --danger: #d93025; --dark: #202124; --bg: #f1f3f4; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
-        
-        /* SECURITY OVERLAY */
-        #gatekeeper {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #202124; color: white; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 9999;
-        }
-        .pass-input { padding: 12px; border-radius: 4px; border: none; margin-top: 10px; text-align: center; font-size: 1.2rem; }
-        
-        .dashboard { display: grid; grid-template-columns: 320px 1fr 320px; gap: 15px; max-width: 1400px; margin: 0 auto; display: none; } /* Hidden by default */
-        
-        .card { background: white; border-radius: 8px; border: 1px solid #dadce0; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        .card-header { background: #f8f9fa; padding: 10px 15px; font-weight: bold; font-size: 0.85rem; color: #5f6368; border-bottom: 1px solid #dadce0; display: flex; justify-content: space-between; align-items: center; }
-        .padding { padding: 15px; }
-
-        /* Score Tracker */
-        .score-box { display: flex; justify-content: space-around; align-items: center; text-align: center; background: #202124; color: white; padding: 15px; border-radius: 6px; }
-        .score-val { font-size: 2.5rem; font-weight: bold; display: block; }
-        .score-btn { background: #3c4043; border: none; color: white; padding: 5px 15px; border-radius: 4px; cursor: pointer; margin-top: 5px; }
-
-        /* Strategy Flow */
-        .flow-btn { display: block; width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #dadce0; border-radius: 6px; cursor: pointer; text-align: left; background: white; transition: 0.2s; }
-        .flow-btn:hover { border-color: var(--primary); color: var(--primary); background: #f8fbff; }
-        .action-box { background: #fff4e5; border-left: 4px solid #ffa117; padding: 12px; margin-bottom: 15px; font-size: 0.95rem; }
-
-        .log-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        .log-table td { padding: 8px; border-bottom: 1px solid #eee; }
-        @media (max-width: 1000px) { .dashboard { grid-template-columns: 1fr; } }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
+        #app-container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 600px; width: 100%; }
+        .breadcrumb { font-size: 0.85rem; color: #666; margin-bottom: 1rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .content-area { min-height: 150px; margin-bottom: 2rem; }
+        .question { font-size: 1.25rem; font-weight: 600; color: #2c3e50; margin-bottom: 1.5rem; }
+        .action-box { background-color: #e8f4fd; border-left: 5px solid #3498db; padding: 1rem; margin-top: 1rem; font-style: italic; color: #2980b9; }
+        .btn-group { display: flex; flex-direction: column; gap: 10px; }
+        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: all 0.2s; }
+        .btn-ans { background-color: #3498db; color: white; text-align: left; }
+        .btn-ans:hover { background-color: #2980b9; }
+        .nav-controls { margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem; display: flex; gap: 10px; }
+        .btn-back { background-color: #95a5a6; color: white; flex: 1; }
+        .btn-restart { background-color: #e74c3c; color: white; flex: 1; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
-<div id="gatekeeper">
-    <h2>TennisTrader Secure Access</h2>
-    <input type="password" id="pass-field" class="pass-input" placeholder="Enter Password" onkeypress="checkPass(event)">
-    <p style="color: #888; font-size: 0.8rem; margin-top: 20px;">Press Enter to Login</p>
-</div>
-
-<div class="dashboard" id="main-ui">
-    <div class="side-col">
-        <div class="card">
-            <div class="card-header">SCORE TRACKER <button onclick="resetScore()" class="score-btn" style="margin:0; padding:2px 5px; font-size:10px">RESET</button></div>
-            <div class="padding">
-                <div class="score-box">
-                    <div><span class="score-val" id="score-a">0</span><button class="score-btn" onclick="changeScore('a', 1)">+ Game</button></div>
-                    <div style="font-size: 1.5rem; opacity: 0.5;">VS</div>
-                    <div><span class="score-val" id="score-b">0</span><button class="score-btn" onclick="changeScore('b', 1)">+ Game</button></div>
-                </div>
-            </div>
+<div id-container id="app-container">
+    <div id="breadcrumb" class="breadcrumb">SELECT A STARTING POINT</div>
+    <div class="content-area" id="content-area">
         </div>
-
-        <div class="card">
-            <div class="card-header">CALCULATOR</div>
-            <div class="padding">
-                <input type="text" id="match-name" placeholder="Match Name">
-                <input type="number" id="stake" value="10" placeholder="Stake" oninput="runCalcs()">
-                <input type="number" id="odds" value="1.50" step="0.01" oninput="runCalcs()">
-                <select id="trade-type" onchange="runCalcs()">
-                    <option value="lay">Lay</option>
-                    <option value="back">Back</option>
-                </select>
-                <div style="background:#f8f9fa; padding:10px; border-radius:4px; margin-bottom:10px;">
-                    <div id="risk-out" style="color:var(--danger)">Liability: -$5.00</div>
-                    <div id="profit-out" style="color:var(--success)">Profit: +$10.00</div>
-                </div>
-                <button onclick="logTrade()" style="width:100%; padding:10px; background:var(--primary); color:white; border:none; border-radius:4px; cursor:pointer;">LOG TRADE</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="main-col">
-        <div class="card" style="min-height: 500px;">
-            <div class="card-header">STRATEGY FLOW</div>
-            <div class="padding" id="flow-content"></div>
-        </div>
-    </div>
-
-    <div class="side-col">
-        <div class="card">
-            <div class="card-header">HISTORY</div>
-            <div class="padding">
-                <table class="log-table"><tbody id="history-body"></tbody></table>
-                <button onclick="clearHistory()" style="background:none; border:none; color:red; cursor:pointer; font-size:10px;">CLEAR LOGS</button>
-            </div>
-        </div>
+    <div class="nav-controls">
+        <button class="btn-back" onclick="goBack()" id="back-btn" disabled>Back</button>
+        <button class="btn-restart" onclick="restart()">Restart</button>
     </div>
 </div>
 
 <script>
-// --- SECURITY ---
-const MY_PASSWORD = "sHark2354"; // CHANGE THIS TO YOUR CHOICE
+// Data structure derived from source 
+const flowData = {
+    start: {
+        text: "Which set are you trading?",
+        options: [
+            { label: "START OF SET 1", next: "s1_q1" },
+            { label: "START OF SET 2", next: "s2_q1" }
+        ]
+    },
+    // --- SET 1 PATHWAY ---
+    s1_q1: {
+        breadcrumb: "Set 1 > Q1",
+        text: "(Q1) Expect the favourite to win easily?",
+        options: [
+            { label: "YES", next: "s1_q2_yes" },
+            { label: "NO", next: "s1_q2_no" }
+        ]
+    },
+    s1_q2_yes: {
+        breadcrumb: "Set 1 > Q1 > Q2",
+        text: "(Q2) Chance of favourite being broken?",
+        options: [
+            { label: "YES", next: "s1_q3_yes_yes" },
+            { label: "NO", action: "Wait for favourite’s price to rise min 20 ticks OR wait for favourite to face a break point & then back favourite", next: "s1_q3_no_back" }
+        ]
+    },
+    s1_q3_yes_yes: {
+        breadcrumb: "Set 1 > Q1 > Q2 > Q3",
+        text: "(Q3) Who breaks first?",
+        options: [
+            { label: "Favourite", action: "Lay favourite", next: "s1_q4_lay_fav" },
+            { label: "Underdog", action: "Back the favourite", next: "s1_q4_back_fav" }
+        ]
+    },
+    s1_q4_lay_fav: {
+        breadcrumb: "Set 1 > Q1 > Q2 > Q3 > Q4",
+        text: "(Q4) IF favourite laid, who breaks next?",
+        options: [
+            { label: "Favourite", action: "Exit trade." },
+            { label: "Underdog", action: "Remove liability or hedge" }
+        ]
+    },
+    s1_q4_back_fav: {
+        breadcrumb: "Set 1 > Q1 > Q2 > Q3 > Q4",
+        text: "(Q4) IF favourite backed, who breaks next?",
+        options: [
+            { label: "No breaks", action: "Exit when score is 4-4" },
+            { label: "Favourite", action: "Remove liability or hedge" },
+            { label: "Underdog", action: "Exit for a loss or back favourite again (ONLY if confident favourite will recover).", next: "s1_q5_back_again" }
+        ]
+    },
+    s1_q5_back_again: {
+        breadcrumb: "Set 1 > Q1 > Q2 > Q3 > Q4 > Q5",
+        text: "(Q5) IF favourite backed again, who breaks next?",
+        options: [
+            { label: "Favourite", action: "Remove liability" },
+            { label: "Underdog", action: "Exit trade" },
+            { label: "Break looks unlikely", action: "Exit trade when underdog score reaches 4" }
+        ]
+    },
+    s1_q3_no_back: {
+        breadcrumb: "Set 1 > Q1 > Q2 > Q3",
+        text: "(Q3) IF favourite backed, does he/she break first in the current set?",
+        options: [
+            { label: "No break", action: "Exit trade at 4-4" },
+            { label: "Yes", action: "Remove liability or hedge" },
+            { label: "Underdog breaks", action: "Exit for a loss or back favourite again (ONLY if confident favourite will recover).", next: "s1_q4_no_back_again" }
+        ]
+    },
+    s1_q4_no_back_again: {
+        breadcrumb: "Set 1 > Q1 > Q2 > Q3 > Q4",
+        text: "(Q4) IF favourite backed again, who breaks next?",
+        options: [
+            { label: "Favourite", action: "Remove liability" },
+            { label: "Underdog", action: "Exit trade" },
+            { label: "Break looks unlikely", action: "Exit trade when underdog score reaches 4" }
+        ]
+    },
+    s1_q2_no: {
+        breadcrumb: "Set 1 > Q1 > Q2",
+        text: "(Q2) Is the favourite priced below 1.50?",
+        options: [
+            { label: "YES", action: "Wait for favourite’s price to drop 20 to 25 ticks in the early games & lay favourite", next: "s1_q3_low_price" },
+            { label: "NO", action: "Wait for favourite to break serve & then lay favourite", next: "s1_q3_high_price" }
+        ]
+    },
+    s1_q3_low_price: {
+        breadcrumb: "Set 1 > Q1 > Q2 > Q3",
+        text: "(Q3) IF favourite is laid, who breaks first?",
+        options: [
+            { label: "No pressure from underdog", action: "Exit trade" },
+            { label: "Underdog", action: "Remove liability" },
+            { label: "Favourite", action: "Either exit trade OR lay favourite again (ONLY if confident underdog will be competitive)", next: "s1_q4_low_lay_again" }
+        ]
+    },
+    s1_q4_low_lay_again: {
+        breadcrumb: "Set 1 > Q1 > Q2 > Q3 > Q4",
+        text: "(Q4) IF favourite laid again, who breaks next?",
+        options: [
+            { label: "Favourite", action: "Exit for loss" },
+            { label: "Underdog", action: "Remove liability" },
+            { label: "Break from underdog looks unlikely", action: "Exit for small loss" }
+        ]
+    },
+    s1_q3_high_price: {
+        breadcrumb: "Set 1 > Q1 > Q2 > Q3",
+        text: "(Q3) IF favourite laid, who breaks next?",
+        options: [
+            { label: "Underdog", action: "Remove liability or hedge for profit" },
+            { label: "Favourite", action: "Either exit the trade or lay the favourite again (ONLY if confident the underdog will fight back)", next: "s1_q4_high_lay_again" },
+            { label: "No more breaks", action: "Exit for a small loss, keep the original lay or lay again", next: "s1_q4_no_more_breaks" }
+        ]
+    },
+    s1_q4_high_lay_again: {
+        breadcrumb: "Set 1 > Q1 > Q2 > Q3 > Q4",
+        text: "(Q4) IF favourite laid again, who breaks next?",
+        options: [
+            { label: "Favourite", action: "Exit for loss" },
+            { label: "Underdog", action: "Remove liability or hedge" },
+            { label: "Break from underdog looks unlikely", action: "Exit for small loss" }
+        ]
+    },
+    s1_q4_no_more_breaks: {
+        breadcrumb: "Set 1 > Q1 > Q2 > Q3 > Q4",
+        text: "(Q4) IF kept original lay or laid again, who breaks next?",
+        options: [
+            { label: "Underdog", action: "Remove liability" },
+            { label: "Favourite", action: "Exit for loss" }
+        ]
+    },
 
-function checkPass(e) {
-    if (e.key === "Enter") {
-        const input = document.getElementById('pass-field').value;
-        if (input === MY_PASSWORD) {
-            document.getElementById('gatekeeper').style.display = 'none';
-            document.getElementById('main-ui').style.display = 'grid';
-            renderFlow('start');
-        } else {
-            alert("Incorrect Password");
-            document.getElementById('pass-field').value = "";
-        }
+    // --- SET 2 PATHWAY ---
+    s2_q1: {
+        breadcrumb: "Set 2 > Q1",
+        text: "(Q1) Who won Set 1?",
+        options: [
+            { label: "Underdog", next: "s2_q2_ud" },
+            { label: "Favourite", next: "s2_q2_fav" }
+        ]
+    },
+    s2_q2_ud: {
+        breadcrumb: "Set 2 > Q1 > Q2",
+        text: "(Q2) Was the favourite competitive in Set 1?",
+        options: [
+            { label: "NO", action: "If the favourite has not created break chances or maybe look injured or sick, safer to leave the set alone" },
+            { label: "YES", action: "Favourite will usually have had chances in Set 1 & favoured by market in Set 2. Lay the underdog", next: "s2_q3_lay_ud" }
+        ]
+    },
+    s2_q3_lay_ud: {
+        breadcrumb: "Set 2 > Q1 > Q2 > Q3",
+        text: "(Q3) IF underdog is laid, is underdog broken before score is 4-4?",
+        options: [
+            { label: "YES", action: "Remove liability to leave a free bet or hedge evenly" },
+            { label: "NO", action: "Remove liability or hedge evenly" },
+            { label: "Underdog broke favourite", action: "Exit for a loss OR lay the underdog again", next: "s2_q4_ud_lay_again" }
+        ]
+    },
+    s2_q4_ud_lay_again: {
+        breadcrumb: "Set 2 > Q1 > Q2 > Q3 > Q4",
+        text: "(Q4) IF underdog was laid again, who breaks next?",
+        options: [
+            { label: "Favourite", action: "Remove all liability" },
+            { label: "Underdog", action: "Exit for a loss" }
+        ]
+    },
+    s2_q2_fav: {
+        breadcrumb: "Set 2 > Q1 > Q2",
+        text: "(Q2) How many times was the favourite broken?",
+        options: [
+            { label: "Zero", action: "Leave set alone OR wait for favourite’s price to drop 10 to 15 ticks, & lay favourite IF underdog has had break chances in Set 1", next: "s2_q3_fav_0" },
+            { label: "Once", action: "Wait for favourite’s price to drop by 10 to 15 ticks before laying favourite", next: "s2_q3_fav_1" },
+            { label: "Two or more times", action: "Lay favourite with part stake", next: "s2_q3_fav_2" }
+        ]
+    },
+    s2_q3_fav_0: {
+        breadcrumb: "Set 2 > Q1 > Q2 > Q3",
+        text: "(Q3) IF favourite is laid, is favourite broken before score is 4-4?",
+        options: [
+            { label: "NO", action: "Exit at 4-4" },
+            { label: "YES", action: "Remove liability or hedge evenly" },
+            { label: "Favourite broke underdog", action: "Exit OR lay favourite again (ONLY if confident underdog will recover at least 1 break)" }
+        ]
+    },
+    s2_q3_fav_1: {
+        breadcrumb: "Set 2 > Q1 > Q2 > Q3",
+        text: "(Q3) IF favourite is laid, is favourite broken before score is 4-4?",
+        options: [
+            { label: "NO", action: "Exit at 4-4" },
+            { label: "YES", action: "Remove liability or hedge evenly" },
+            { label: "Favourite broke underdog", action: "Exit OR lay favourite (ONLY if confident underdog will recover at least 1 break)" }
+        ]
+    },
+    s2_q3_fav_2: {
+        breadcrumb: "Set 2 > Q1 > Q2 > Q3",
+        text: "(3) IF favourite laid (with part stakes), is favourite broken before score is 4-4?",
+        options: [
+            { label: "NO", action: "Exit at 4-4" },
+            { label: "YES", action: "Remove liability or hedge evenly" },
+            { label: "Favourite broke underdog", action: "Exit OR lay favourite again (ONLY if confident the underdog will recover at least 1 break)" }
+        ]
+    }
+};
+
+let historyStack = ['start'];
+
+function render() {
+    const currentStateKey = historyStack[historyStack.length - 1];
+    const state = flowData[currentStateKey];
+    const contentArea = document.getElementById('content-area');
+    const breadcrumbArea = document.getElementById('breadcrumb');
+    const backBtn = document.getElementById('back-btn');
+
+    // Update Breadcrumb
+    breadcrumbArea.innerText = state.breadcrumb || "SELECT A STARTING POINT";
+    
+    // Clear Area
+    contentArea.innerHTML = '';
+
+    // Render Question
+    const qDiv = document.createElement('div');
+    qDiv.className = 'question';
+    qDiv.innerText = state.text;
+    contentArea.appendChild(qDiv);
+
+    // Render Action if present
+    if (state.action) {
+        const aDiv = document.createElement('div');
+        aDiv.className = 'action-box';
+        aDiv.innerHTML = `<strong>Act:</strong> ${state.action}`;
+        contentArea.appendChild(aDiv);
+    }
+
+    // Render Buttons
+    const btnGroup = document.createElement('div');
+    btnGroup.className = 'btn-group';
+    state.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-ans';
+        btn.innerText = opt.label;
+        btn.onclick = () => {
+            // Logic: if option has an action, we update current state or move to next
+            if (opt.action) {
+                // If it's a final action with no 'next', we just display it
+                // To support 'back' logic, we create a virtual state for the action
+                const virtualKey = 'action_' + Math.random().toString(36).substr(2, 9);
+                flowData[virtualKey] = {
+                    breadcrumb: state.breadcrumb,
+                    text: state.text,
+                    action: opt.action,
+                    options: opt.next ? flowData[opt.next].options : []
+                };
+                if (opt.next) {
+                    historyStack.push(opt.next);
+                    // We need to inject the action into the next state for display
+                    flowData[opt.next].action = opt.action;
+                } else {
+                    // terminal state
+                    historyStack.push(virtualKey);
+                }
+            } else if (opt.next) {
+                historyStack.push(opt.next);
+            }
+            render();
+        };
+        btnGroup.appendChild(btn);
+    });
+    contentArea.appendChild(btnGroup);
+
+    // Update Back button state
+    backBtn.disabled = historyStack.length <= 1;
+}
+
+function goBack() {
+    if (historyStack.length > 1) {
+        historyStack.pop();
+        render();
     }
 }
 
-// --- LOGIC (RETAINED FROM PREVIOUS VERSION) ---
-let scoreA = 0, scoreB = 0;
-function changeScore(p, v) { p==='a' ? scoreA+=v : scoreB+=v; document.getElementById('score-a').innerText=scoreA; document.getElementById('score-b').innerText=scoreB; }
-function resetScore() { scoreA=0; scoreB=0; changeScore('a',0); }
-
-const flow = {
-    start: { text: "Select Match Phase:", options: [{ text: "Set 1 Start", next: "s1_expect" }, { text: "Set 2 Start", next: "s2_winner" }] },
-    s1_expect: { text: "Expect favorite to win easily?", options: [{ text: "Yes", next: "s1_yes" }, { text: "No", next: "s1_no" }] },
-    s1_yes: { action: "Look for 20 tick rise then BACK.", options: [{ text: "Restart", next: "start" }] },
-    s1_no: { action: "Look for price drop then LAY.", options: [{ text: "Restart", next: "start" }] },
-    s2_winner: { text: "Who won set 1?", options: [{ text: "Fav", next: "start" }, { text: "Dog", next: "start" }] }
-};
-
-function renderFlow(id) {
-    const node = flow[id];
-    let html = (node.action ? `<div class="action-box">${node.action}</div>` : "") + `<div class="node-text">${node.text}</div>`;
-    node.options.forEach(o => html += `<button class="flow-btn" onclick="renderFlow('${o.next}')">${o.text}</button>`);
-    document.getElementById('flow-content').innerHTML = html;
+function restart() {
+    historyStack = ['start'];
+    render();
 }
 
-function runCalcs() {
-    const s = document.getElementById('stake').value; const o = document.getElementById('odds').value;
-    const type = document.getElementById('trade-type').value;
-    const liab = type === 'back' ? s : s*(o-1);
-    const prof = type === 'back' ? s*(o-1) : s;
-    document.getElementById('risk-out').innerText = `Liability: -$${parseFloat(liab).toFixed(2)}`;
-    document.getElementById('profit-out').innerText = `Profit: +$${parseFloat(prof).toFixed(2)}`;
-}
-
-function logTrade() {
-    const entry = { match: document.getElementById('match-name').value, score: `${scoreA}-${scoreB}`, details: `${document.getElementById('trade-type').value} $${document.getElementById('stake').value}` };
-    let h = JSON.parse(localStorage.getItem('ts_log') || "[]"); h.unshift(entry);
-    localStorage.setItem('ts_log', JSON.stringify(h)); updateUI();
-}
-
-function updateUI() {
-    const h = JSON.parse(localStorage.getItem('ts_log') || "[]");
-    document.getElementById('history-body').innerHTML = h.map(x => `<tr><td>${x.match} (${x.score})</td><td>${x.details}</td></tr>`).join('');
-}
-
-function clearHistory() { localStorage.removeItem('ts_log'); updateUI(); }
-
-updateUI();
-runCalcs();
+// Initial render
+render();
 </script>
+
 </body>
 </html>
